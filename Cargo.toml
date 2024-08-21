@@ -1,0 +1,32 @@
+[package]
+name = "gbt_stream_server"
+version = "0.1.0"
+edition = "2021"
+
+
+
+[dependencies]
+
+chrono = { version = "0.4.38" }
+
+local-ip-address = { version = "0.6.1" }
+
+rtp = { version = "0.11.0" }
+
+structopt = { version = "0.3.26" }
+
+time = { version = "0.3.36", features = ["formatting", "macros"] }
+
+tracing = { version = "0.1.40" }
+tracing-appender = { version = "0.2.3" }
+tracing-subscriber = { version = "0.3.18 ", features = ["env-filter", "time", "local-time", "json"] }
+
+tokio = { version = "1.39.2", features = ["full"] }
+
+
+
+[build-dependencies]
+regex = { version = "1.10.6" }
+walkdir = { version = "2.5.0" }
+
+

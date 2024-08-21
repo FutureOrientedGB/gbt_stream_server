@@ -12,3 +12,9 @@ Cargo.lock
 
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
+
+# project version file
+src/version.rs
+
+# project build number file
+build_number.txt
