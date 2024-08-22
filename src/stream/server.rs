@@ -37,10 +37,6 @@ pub async fn bind(
     }
 }
 
-fn parse_rtp_message(buffer: &[u8]) -> Option<(Vec<u8>, Vec<u8>)> {
-    None
-}
-
 pub async fn run_forever(
     cli_args: CommandLines,
     stream_handler: std::sync::Arc<StreamHandler>,
@@ -59,10 +55,11 @@ pub async fn run_forever(
             {
                 Err(e) => {
                     tracing::error!("UdpSocket::recv_from error, e: {:?}", e);
+                    return;
                 }
                 Ok((amount, addr)) => {
                     // dispatch
-                    tracing::info!("recv rtp packet from {}, size: {}", addr.to_string(), amount);
+                    stream_handler_udp.on_rtp(addr, &recv_buff.as_slice()[..amount]);
                 }
             }
         }
@@ -78,36 +75,42 @@ pub async fn run_forever(
                 Ok((tcp_stream, addr)) => {
                     let stream_handler_cloned = stream_handler.clone();
                     tokio::spawn(async move {
-                        let mut buffer = Vec::new();
-
                         let tcp_stream_mutex_arc =
                             std::sync::Arc::new(tokio::sync::Mutex::new(tcp_stream));
 
                         loop {
-                            let mut recv_buff = vec![0; 1024];
-                            let n = match tcp_stream_mutex_arc
+                            let rtp_length = {
+                                match tcp_stream_mutex_arc.clone().lock().await.read_u16().await {
+                                    Err(e) => {
+                                        tracing::error!("TcpStream::read_u16 error, e: {:?}", e);
+                                        0
+                                    }
+                                    Ok(length) => length,
+                                }
+                            };
+                            if 0 == rtp_length {
+                                return;
+                            }
+
+                            let mut recv_buff = vec![0; rtp_length as usize];
+                            match tcp_stream_mutex_arc
                                 .clone()
                                 .lock()
                                 .await
-                                .read(&mut recv_buff)
+                                .read_exact(&mut recv_buff)
                                 .await
                             {
                                 Ok(0) => return, // connection closed
-                                Ok(n) => n,
                                 Err(e) => {
                                     tracing::error!("TcpStream::read error, e: {:?}", e);
                                     return;
                                 }
+                                Ok(amount) => {
+                                    // dispatch
+                                    stream_handler_cloned
+                                        .on_rtp(addr, &recv_buff.as_slice()[..amount]);
+                                }
                             };
-
-                            buffer.extend_from_slice(&recv_buff[..n]);
-
-                            while let Some((message, remaining)) = parse_rtp_message(&buffer) {
-                                // dispatch
-                                tracing::info!("recv rtp packet from {}, size: {}", addr.to_string(), message.len());
-
-                                buffer = remaining;
-                            }
                         }
                     });
                 }
