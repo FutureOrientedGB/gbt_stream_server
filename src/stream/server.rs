@@ -3,6 +3,7 @@ use tokio::{self, io::AsyncReadExt};
 use crate::utils::cli::CommandLines;
 
 use super::handler::StreamHandler;
+use super::utils::reorder::RtpPacketReOrder;
 
 pub async fn bind(
     cli_args: &CommandLines,
@@ -47,6 +48,8 @@ pub async fn run_forever(
         let mut recv_buff = Vec::<u8>::default();
         recv_buff.resize(cli_args.socket_recv_buffer_size, 0);
 
+        let mut packets_reorder = RtpPacketReOrder::new(5);
+
         loop {
             match stream_handler_udp
                 .stream_udp_socket
@@ -59,7 +62,11 @@ pub async fn run_forever(
                 }
                 Ok((amount, addr)) => {
                     // dispatch
-                    stream_handler_udp.on_rtp(addr, &recv_buff.as_slice()[..amount]);
+                    stream_handler_udp.on_rtp(
+                        addr,
+                        &recv_buff.as_slice()[..amount],
+                        &mut packets_reorder,
+                    );
                 }
             }
         }
@@ -68,6 +75,8 @@ pub async fn run_forever(
     // tcp server
     let tcp_server_handle = tokio::spawn(async move {
         loop {
+            let mut packets_reorder = RtpPacketReOrder::new(5);
+
             match stream_handler.stream_tcp_listener.accept().await {
                 Err(e) => {
                     tracing::error!("TcpListener::accept error: {:?}", e);
@@ -79,6 +88,7 @@ pub async fn run_forever(
                             std::sync::Arc::new(tokio::sync::Mutex::new(tcp_stream));
 
                         loop {
+                            // 2 bytes size header
                             let rtp_length = {
                                 match tcp_stream_mutex_arc.clone().lock().await.read_u16().await {
                                     Err(e) => {
@@ -92,6 +102,7 @@ pub async fn run_forever(
                                 return;
                             }
 
+                            // content
                             let mut recv_buff = vec![0; rtp_length as usize];
                             match tcp_stream_mutex_arc
                                 .clone()
@@ -107,8 +118,11 @@ pub async fn run_forever(
                                 }
                                 Ok(amount) => {
                                     // dispatch
-                                    stream_handler_cloned
-                                        .on_rtp(addr, &recv_buff.as_slice()[..amount]);
+                                    stream_handler_cloned.on_rtp(
+                                        addr,
+                                        &recv_buff.as_slice()[..amount],
+                                        &mut packets_reorder,
+                                    );
                                 }
                             };
                         }

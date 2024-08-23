@@ -1,0 +1,60 @@
+use std::collections::BTreeMap;
+
+use rtp;
+
+pub struct RtpPacketReOrder {
+    min_timestamp: u32,
+    limit_frames: usize,
+    packet_groups: BTreeMap<u32, BTreeMap<u16, rtp::packet::Packet>>, // timestamp -> {sequence_number -> packet}
+}
+
+impl RtpPacketReOrder {
+    pub fn new(limit_frames: usize) -> Self {
+        RtpPacketReOrder {
+            min_timestamp: 0,
+            limit_frames: limit_frames,
+            packet_groups: BTreeMap::new(),
+        }
+    }
+
+    pub fn feed_rtp(&mut self, packet: rtp::packet::Packet) -> bool {
+        let timestamp = packet.header.timestamp;
+        let sequence_number = packet.header.sequence_number;
+
+        // drop
+        if timestamp < self.min_timestamp {
+            tracing::warn!("expired packet, {} < {}", timestamp, self.min_timestamp);
+            return false;
+        }
+
+        // first level tree (use timestamp as key)
+        let timestamp_tree = self
+            .packet_groups
+            .entry(timestamp)
+            .or_insert_with(BTreeMap::new);
+
+        // second level tree (use sequence_number as key)
+        timestamp_tree.entry(sequence_number).or_insert(packet);
+
+        return self.packet_groups.len() > self.limit_frames;
+    }
+
+    pub fn pop_frame(&mut self) -> (u32, Vec<u8>) {
+        // pop minimum tree, merge it's packet payload into a frame
+        let mut ts = 0;
+        let mut frame = Vec::new();
+        if let Some((key, timestamp_tree)) = self.packet_groups.pop_first() {
+            ts = key;
+            for (_sn, packet) in timestamp_tree {
+                frame.extend_from_slice(&packet.payload);
+            }
+        }
+
+        // update min_timestamp
+        if !self.packet_groups.is_empty() {
+            self.min_timestamp = self.packet_groups.keys().min().unwrap_or(&0).clone();
+        }
+
+        return (ts, frame);
+    }
+}
