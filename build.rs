@@ -3,6 +3,11 @@ use regex::Regex;
 use walkdir::WalkDir;
 
 fn main() {
+    // add clang executalbe dir to PATH env
+    // add pkgconfig executalbe dir to PATH env
+    // set LIBCLANG_PATH env to dir which contains libclang
+    // set PKG_CONFIG_PATH env to dir which contains *.pc
+
     trigger_build_every_time();
 
     replace_version_in_rs(
@@ -53,7 +58,10 @@ fn replace_version_in_rs(update_all_files: bool) {
         let original_content = std::fs::read_to_string(&file).expect("Failed to read file");
         let replaced_content = version_regex.replace_all(&original_content, &version_replacement);
         if original_content != replaced_content {
-            println!("std::fs::write, file: {}, version: {}", &file, &latest_version);
+            println!(
+                "std::fs::write, file: {}, version: {}",
+                &file, &latest_version
+            );
             std::fs::write(&file, replaced_content.as_ref()).expect("std::fs::write error");
         }
     }

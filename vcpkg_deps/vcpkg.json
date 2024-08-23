@@ -1,10 +1,23 @@
 {
   "dependencies": [
-    {
-      "name": "ffmpeg"
-    }
+    "cli11",
+    "fmt",
+    "spdlog",
+    "ffmpeg"
   ],
   "overrides": [
+    {
+      "name": "cli11",
+      "version": "2.4.2"
+    },
+    {
+      "name": "fmt",
+      "version": "11.0.2"
+    },
+    {
+      "name": "spdlog",
+      "version": "1.14.1"
+    },
     {
       "name": "cli11",
       "version": "7.0.2#3"

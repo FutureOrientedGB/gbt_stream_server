@@ -6,8 +6,9 @@ edition = "2021"
 
 
 [dependencies]
-
 chrono = { version = "0.4.38" }
+
+ffmpeg-sys-next = { version = "7.0.2" }
 
 local-ip-address = { version = "0.6.1" }
 

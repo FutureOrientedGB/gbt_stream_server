@@ -6,6 +6,12 @@ set(PROJECT_NAME test)
 # declare project
 project(${PROJECT_NAME})
 
+# find deps
+find_package(CLI11 CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
+find_package(FFMPEG REQUIRED)
+
 # defines
 ADD_DEFINITIONS(-DUNICODE -D_UNICODE)
 ADD_DEFINITIONS(-DVC_EXTRALEAN)
@@ -36,6 +42,30 @@ set_target_properties(
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
 )
 endif(MSVC)
+
+# set include dir
+target_include_directories(
+    ${PROJECT_NAME}
+    PRIVATE
+    ${FFMPEG_INCLUDE_DIRS}
+)
+
+# set lib dir
+target_link_directories(
+    ${PROJECT_NAME}
+    PRIVATE
+    ${FFMPEG_LIBRARY_DIRS}
+)
+
+# link libs
+target_link_libraries(
+    ${PROJECT_NAME}
+    PRIVATE
+    CLI11::CLI11
+    fmt::fmt
+    spdlog::spdlog
+    ${FFMPEG_LIBRARIES}
+)
 
 # output dir
 set_target_properties(
