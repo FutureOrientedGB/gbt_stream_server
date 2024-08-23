@@ -18,3 +18,9 @@ src/version.rs
 
 # project build number file
 build_number.txt
+
+# vcpkg
+vcpkg/
+
+# project
+project/

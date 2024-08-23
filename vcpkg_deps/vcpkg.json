@@ -1,0 +1,13 @@
+{
+  "dependencies": [
+    {
+      "name": "ffmpeg"
+    }
+  ],
+  "overrides": [
+    {
+      "name": "cli11",
+      "version": "7.0.2#3"
+    }
+  ]
+}
