@@ -4,9 +4,7 @@ use walkdir::WalkDir;
 
 fn main() {
     // add clang executalbe dir to PATH env
-    // add pkgconfig executalbe dir to PATH env
     // set LIBCLANG_PATH env to dir which contains libclang
-    // set PKG_CONFIG_PATH env to dir which contains *.pc
 
     trigger_build_every_time();
 

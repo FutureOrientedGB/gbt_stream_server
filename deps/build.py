@@ -64,14 +64,24 @@ def setup_logger():
 
 
 def default_triplet() -> str:
-    os_name = platform.system()
+    arch = {
+        'x86': 'x86',
+        'i386': 'x86',
+        'AMD64': 'x64',
+        'x86_64': 'x64',
+        'arm': 'arm',
+        'armv7l': 'arm',
+        'arm64': 'arm64',
+        'aarch64': 'arm64',
+    }[platform.machine()]
 
+    os_name = platform.system()
     if os_name == 'Windows':
-        return 'x64-windows-static'
+        return f'{arch}-windows-static'
     elif os_name == 'Darwin':
-        return 'arm64-osx'
+        return f'{arch}-osx'
     elif os_name == 'Linux':
-        return 'x64-linux'
+        return f'{arch}-linux'
     else:
         logging.error('unsupport os: %s', os_name)
         return ''
@@ -173,7 +183,7 @@ def parse_vcpkg_conf() -> vcpkg_conf:
         registry = data.get('default-registry', {})
         return vcpkg_conf(
             repository=registry.get('repository', ''),
-            reference=registry.get('reference', ''),
+            reference=registry.get('reference', 'master'),
             baseline=registry.get('baseline', ''),
         )
 
@@ -279,11 +289,13 @@ def main():
     args = parse_cli_args()
     if args.vcpkg_root_dir == '':
         return
+    logging.info(args)
     
     conf = parse_vcpkg_conf()
     if conf.repository == '':
         logging.error('invalid vcpkg-configuration.json')
         return
+    logging.info(conf)
     
     if args.vcpkg_bootstrap:
         bootstrap_vcpkg(root_dir=args.vcpkg_root_dir, conf=conf, triplet=args.vcpkg_triplet)
