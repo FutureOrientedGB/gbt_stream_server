@@ -23,4 +23,4 @@ build_number.txt
 vcpkg/
 
 # project
-project/
+build/
