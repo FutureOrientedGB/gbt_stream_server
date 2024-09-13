@@ -4,6 +4,10 @@ pub mod stream;
 pub mod utils;
 pub mod version;
 
+pub mod gss {
+    tonic::include_proto!("gss");
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // parse command line arguments
@@ -12,17 +16,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // open daily log
     utils::log::open_daily_file_log(&version::APP_NAME, &version::APP_VERSION, &cli_args);
 
-    // prepare stream server
-    let (stream_udp_socket, stream_tcp_listener) = stream::server::bind(&cli_args).await?;
+    std::panic::set_hook(Box::new(|info: &std::panic::PanicInfo<'_>| {
+        tracing::error!("{:?}", info);
+    }));
 
-    // run stream server
-    let stream_handler =
-        stream::handler::StreamHandler::new(&cli_args, stream_udp_socket, stream_tcp_listener);
-    let stream_handler_arc = std::sync::Arc::new(stream_handler);
-    let stream_service = stream::server::run_forever(cli_args.clone(), stream_handler_arc.clone());
-
-    // wait
-    let _ = tokio::join!(stream_service);
+    let rpc_addr = format!("{}:{}", &cli_args.host, &cli_args.grpc_port);
+    let rpc_service = rpc::server::MyGbtStreamService::new(cli_args.clone());
+    match tonic::transport::Server::builder()
+        .add_service(gss::gbt_stream_service_server::GbtStreamServiceServer::new(
+            rpc_service,
+        ))
+        .serve(rpc_addr.parse().unwrap())
+        .await
+    {
+        Ok(_) => {}
+        Err(e) => {
+            tracing::error!("grpc serve error, e: {:?}", e);
+        }
+    };
 
     Ok(())
 }

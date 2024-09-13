@@ -8,36 +8,18 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug executable 'gbt_stream_server'",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=gbt_stream_server",
-                    "--package=gbt_stream_server"
-                ],
-                "filter": {
-                    "name": "gbt_stream_server",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'gbt_stream_server'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=gbt_stream_server",
-                    "--package=gbt_stream_server"
-                ],
-                "filter": {
-                    "name": "gbt_stream_server",
-                    "kind": "bin"
-                }
-            },
+            "program": "target/debug/gbt_stream_server",
+            // "cargo": {
+            //     "args": [
+            //         "build",
+            //         "--bin=gbt_stream_server",
+            //         "--package=gbt_stream_server"
+            //     ],
+            //     "filter": {
+            //         "name": "gbt_stream_server",
+            //         "kind": "bin"
+            //     }
+            // },
             "args": [],
             "cwd": "${workspaceFolder}"
         }

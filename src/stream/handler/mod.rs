@@ -1,7 +1,5 @@
 pub mod rtp;
 
-use crate::utils::cli::CommandLines;
-
 pub struct StreamHandler {
     pub ip: String,
     pub port: u16,
@@ -11,13 +9,14 @@ pub struct StreamHandler {
 
 impl StreamHandler {
     pub fn new(
-        cli_args: &CommandLines,
+        ip: String,
+        port: u16,
         stream_udp_socket: tokio::net::UdpSocket,
         stream_tcp_listener: tokio::net::TcpListener,
     ) -> Self {
         StreamHandler {
-            ip: cli_args.my_ip.clone(),
-            port: cli_args.stream_port,
+            ip: ip,
+            port: port,
             stream_udp_socket: stream_udp_socket,
             stream_tcp_listener: stream_tcp_listener,
         }

@@ -11,10 +11,13 @@ pub struct CommandLines {
     pub my_ip: String,
 
     #[structopt(long, default_value = "7080")]
-    pub stream_port: u16,
-
-    #[structopt(long, default_value = "8090")]
     pub grpc_port: u16,
+
+    #[structopt(long, default_value = "10001")]
+    pub stream_port_start: u16,
+
+    #[structopt(long, default_value = "20000")]
+    pub stream_port_stop: u16,
 
     #[structopt(long, default_value = "1500")]
     pub socket_recv_buffer_size: usize,

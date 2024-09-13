@@ -1,5 +1,7 @@
 use regex::Regex;
 
+use tonic_build;
+
 use walkdir::WalkDir;
 
 fn main() {
@@ -11,6 +13,13 @@ fn main() {
     replace_version_in_rs(
         "true" == std::env::var("UPDATE_ALL_FILES").unwrap_or(String::from("false").to_lowercase()),
     );
+
+    println!("cargo:rerun-if-changed=src/proto/gss.proto");
+    tonic_build::configure()
+        .type_attribute(".", "#[derive(serde::Serialize, serde::Deserialize)]")
+        .compile_well_known_types(true)
+        .compile(&["src/proto/gss.proto"], &["proto"])
+        .unwrap();
 }
 
 fn trigger_build_every_time() {

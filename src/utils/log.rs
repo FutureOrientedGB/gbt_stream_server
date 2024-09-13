@@ -21,7 +21,7 @@ pub fn open_daily_file_log(app_name: &str, app_version: &str, cli_args: &Command
         // .json()
         .with_writer(tracing_appender::rolling::daily(
             &log_dir,
-            format!("{app_name}.{port}.log", port = cli_args.stream_port),
+            format!("{app_name}.{port}.log", port = cli_args.grpc_port),
         ))
         .with_max_level(tracing::Level::INFO)
         .with_timer(tracing_subscriber::fmt::time::OffsetTime::new(
@@ -37,7 +37,7 @@ pub fn open_daily_file_log(app_name: &str, app_version: &str, cli_args: &Command
 
     log_dir.push(format!(
         "{app_name}.{port}.log.{date}",
-        port = cli_args.stream_port,
+        port = cli_args.grpc_port,
         date = chrono::Local::now().format("%Y-%m-%d")
     ));
     println!(
@@ -61,7 +61,8 @@ pub fn open_daily_file_log(app_name: &str, app_version: &str, cli_args: &Command
 ║                                                            ║
 ║ host: {:<52} ║
 ║ my_ip: {:<51} ║
-║ stream_port: {:<45} ║
+║ stream_port_start: {:<39} ║
+║ stream_port_stop: {:<40} ║
 ║ grpc_port: {:<47} ║
 ║ socket_recv_buffer_size: {:<33} ║
 ╚════════════════════════════════════════════════════════════╝{}",
@@ -69,7 +70,8 @@ pub fn open_daily_file_log(app_name: &str, app_version: &str, cli_args: &Command
         app_version,
         &cli_args.host,
         &cli_args.my_ip,
-        &cli_args.stream_port,
+        &cli_args.stream_port_start,
+        &cli_args.stream_port_stop,
         &cli_args.grpc_port,
         &cli_args.socket_recv_buffer_size,
         Color::RESET

@@ -10,11 +10,20 @@ chrono = { version = "0.4.38" }
 
 ffmpeg-sys-next = { version = "7.0.2" }
 
+futures = { version = "0.3.30" }
+futures-util = "0.3.30"
+
 libc = { version = "0.2.158" }
 
 local-ip-address = { version = "0.6.1" }
 
+prost = { version = "0.13.2" }
+prost-types = { version = "0.13.2" }
+
 rtp = { version = "0.11.0" }
+
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = "1.0.128"
 
 structopt = { version = "0.3.26" }
 
@@ -26,12 +35,15 @@ tracing-subscriber = { version = "0.3.18 ", features = ["env-filter", "time", "l
 
 tokio = { version = "1.39.2", features = ["full"] }
 
+tonic = { version = "0.12.2" }
+
 webrtc-util = { version = "0.9.0" }
 
 
 
 [build-dependencies]
 regex = { version = "1.10.6" }
+tonic-build = { version = "0.12.2" }
 walkdir = { version = "2.5.0" }
 
 
