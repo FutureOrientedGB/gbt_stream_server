@@ -25,3 +25,7 @@ vcpkg/
 # project
 build/
 __pycache__/
+*.ps
+*.ts
+*.mp4
+*.mpg

@@ -265,7 +265,7 @@ def cmake_generate(build_dir: str, vcpkg_root_dir: str, triplet: str):
     logging.info(inspect.currentframe().f_code.co_name)
 
     shell(args=[
-        'cmake.exe' if 'windows' in triplet else 'cmake',
+        'cmake',
         '-B', f'{build_dir}/{triplet}',
         f'-DCMAKE_TOOLCHAIN_FILE={vcpkg_root_dir}/scripts/buildsystems/vcpkg.cmake',
         f'-DVCPKG_TARGET_TRIPLET={triplet}',
@@ -277,7 +277,7 @@ def cmake_build(build_dir: str, triplet: str, config: str):
     logging.info(inspect.currentframe().f_code.co_name)
 
     shell(args=[
-        'cmake.exe' if 'windows' in triplet else 'cmake',
+        'cmake',
         '--build', f'{build_dir}/{triplet}',
         '--config', config
     ])
