@@ -1,46 +1,65 @@
 // self
 #include "ffmpeg_utils.hpp"
 
-// c++
-#include <string>
-#include <vector>
-
 // ffmpeg
 extern "C" {
-#include <libavutil/avutil.h>
-#include <libavutil/log.h>
+#include <libavutil/error.h>
 #include <libavcodec/avcodec.h>
 }
 
+// spdlog
+#include <spdlog/spdlog.h>
 
 
-void ffmpeg_log_default(int log_level) {
-	av_log_set_level(log_level);
-	av_log_set_callback(av_log_default_callback);
+
+std::string get_ffmpeg_error_str(int error_num)
+{
+    char error_buf[AV_ERROR_MAX_STRING_SIZE] = { 0 };
+    av_strerror(error_num, error_buf, sizeof(error_buf));
+    return std::string(error_buf);
 }
 
+void ffmpeg_log_callback(void *avcl_ptr, int level, const char *fmt, va_list vl)
+{
+    //vfprintf(stdout, fmt, vl);
 
-std::string ffmpeg_error_str(int code) {
-	std::vector<char> buf;
-	buf.resize(AV_ERROR_MAX_STRING_SIZE);
+    if (level > av_log_get_level()) {
+        return;
+    }
 
-	av_strerror(code, buf.data(), buf.size());
-	return std::string(buf.data());
-}
+    int prefix = 1;
+    const int line_size = 1024;
+    char line[line_size] = { 0 };
+    av_log_format_line(avcl_ptr, level, fmt, vl, line, line_size, &prefix);
 
-
-void ffmpeg_free_packet(AVPacket **frame) {
-	if (frame != nullptr && *frame != nullptr) {
-		av_packet_free(frame);
-		*frame = nullptr;
-	}
-}
-
-
-void ffmpeg_free_frame(AVFrame **frame) {
-	if (frame != nullptr && *frame != nullptr) {
-		av_frame_free(frame);
-		*frame = nullptr;
-	}
+    switch (level)
+    {
+    case AV_LOG_TRACE:
+        spdlog::log(spdlog::level::trace, line);
+        break;
+    case AV_LOG_DEBUG:
+        spdlog::log(spdlog::level::debug, line);
+        break;
+    case AV_LOG_VERBOSE:
+        spdlog::log(spdlog::level::debug, line);
+        break;
+    case AV_LOG_INFO:
+        spdlog::log(spdlog::level::info, line);
+        break;
+    case AV_LOG_WARNING:
+        spdlog::log(spdlog::level::warn, line);
+        break;
+    case AV_LOG_ERROR:
+        spdlog::log(spdlog::level::err, line);
+        break;
+    case AV_LOG_FATAL:
+        spdlog::log(spdlog::level::critical, line);
+        break;
+    case AV_LOG_PANIC:
+        spdlog::log(spdlog::level::critical, line);
+        break;
+    default:
+        break;
+    }
 }
 

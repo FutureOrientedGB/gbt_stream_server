@@ -22,6 +22,14 @@
             // },
             "args": [],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'vcpkg_deps'",
+            "program": "deps/build/x64-windows-static/Debug/vcpkg_deps.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/deps"
         }
     ]
 }

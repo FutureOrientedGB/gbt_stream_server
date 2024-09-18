@@ -3,17 +3,7 @@
 // c++
 #include <string>
 
-// ffmpeg
-struct AVPacket;
-struct AVFrame;
 
+std::string get_ffmpeg_error_str(int code);
 
-
-void ffmpeg_log_default(int level);
-
-std::string ffmpeg_error_str(int code);
-
-void ffmpeg_free_packet(AVPacket **frame);
-
-void ffmpeg_free_frame(AVFrame **frame);
-
+void ffmpeg_log_callback(void *avcl_ptr, int level, const char *fmt, va_list vl);
