@@ -1,3 +1,4 @@
+use tokio;
 use tonic::{Request, Response, Status};
 
 use crate::gss::{ResponseCode, BindStreamPortRequest, BindStreamPortResponse};
@@ -11,14 +12,13 @@ impl MyGbtStreamService {
     ) -> Result<Response<BindStreamPortResponse>, Status> {
         let mut reply = BindStreamPortResponse::default();
 
+        // alloc port
         let port = self.pop_port();
         if port == 0 {
             reply.code = ResponseCode::NoPortsFree.into();
             reply.message = ResponseCode::NoPortsFree.as_str_name().to_string();
             return Ok(Response::new(reply));
         }
-
-        let is_running = std::sync::Arc::new(true);
 
         // bind
         match stream::server::bind(&self.cli_args.host, port).await {
@@ -29,7 +29,7 @@ impl MyGbtStreamService {
                 return Ok(Response::new(reply));
             }
             Ok((stream_udp_socket, stream_tcp_listener)) => {
-                // listen
+                // serve
                 let stream_handler = stream::handler::StreamHandler::new(
                     self.cli_args.my_ip.clone(),
                     port,
@@ -37,9 +37,10 @@ impl MyGbtStreamService {
                     stream_tcp_listener,
                 );
 
-                let arc_stream_handler = std::sync::Arc::new(stream_handler);
+                let (udp_tcp_cancel_tx, _) = tokio::sync::broadcast::channel(1);
+                let arc_stream_handler: std::sync::Arc<stream::handler::StreamHandler> = std::sync::Arc::new(stream_handler);
                 match stream::server::run_forever(
-                    is_running.clone(),
+                    udp_tcp_cancel_tx.clone(),
                     self.cli_args.socket_recv_buffer_size,
                     arc_stream_handler,
                 )
@@ -52,7 +53,7 @@ impl MyGbtStreamService {
                         return Ok(Response::new(reply));
                     }
                     Ok((udp_join_handle, tcp_join_handle)) => {
-                        self.push_task(port, is_running.clone(), udp_join_handle, tcp_join_handle);
+                        self.push_task(port, udp_tcp_cancel_tx, udp_join_handle, tcp_join_handle);
 
                         reply.code = ResponseCode::Ok.into();
                         reply.message = String::new();

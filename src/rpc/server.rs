@@ -8,7 +8,7 @@ use crate::gss::{
 };
 
 pub struct StreamTask {
-    pub is_running: std::sync::Arc<bool>,
+    pub cancel_tx: tokio::sync::broadcast::Sender<()>,
     pub udp_join_handle: tokio::task::JoinHandle<()>,
     pub tcp_join_handle: tokio::task::JoinHandle<()>,
 }
@@ -51,7 +51,7 @@ impl MyGbtStreamService {
     pub fn push_task(
         &self,
         port: u16,
-        is_running: std::sync::Arc<bool>,
+        cancel_tx: tokio::sync::broadcast::Sender<()>,
         udp_join_handle: tokio::task::JoinHandle<()>,
         tcp_join_handle: tokio::task::JoinHandle<()>,
     ) {
@@ -59,7 +59,7 @@ impl MyGbtStreamService {
             join_handlers.insert(
                 port,
                 StreamTask {
-                    is_running: is_running,
+                    cancel_tx: cancel_tx,
                     udp_join_handle: udp_join_handle,
                     tcp_join_handle: tcp_join_handle,
                 },
@@ -72,9 +72,8 @@ impl MyGbtStreamService {
         let mut tcp_handle: Option<tokio::task::JoinHandle<()>> = None;
 
         if let Ok(mut join_handlers) = self.join_handlers.lock() {
-            if let Some(mut task) = join_handlers.remove(&port) {
-                task.is_running = std::sync::Arc::new(false);
-
+            if let Some(task) = join_handlers.remove(&port) {
+                let _ = task.cancel_tx.send(());
                 udp_handle = Some(task.udp_join_handle);
                 tcp_handle = Some(task.tcp_join_handle);
             }

@@ -16,10 +16,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // open daily log
     utils::log::open_daily_file_log(&version::APP_NAME, &version::APP_VERSION, &cli_args);
 
+    // log panic
     std::panic::set_hook(Box::new(|info: &std::panic::PanicInfo<'_>| {
         tracing::error!("{:?}", info);
     }));
 
+    // serve grpc
     let rpc_addr = format!("{}:{}", &cli_args.host, &cli_args.grpc_port);
     let rpc_service = rpc::server::MyGbtStreamService::new(cli_args.clone());
     match tonic::transport::Server::builder()
